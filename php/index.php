@@ -8,8 +8,6 @@
 
     ];
 
-
-
 ?>
 
 
@@ -60,5 +58,6 @@
         <?else:?>
             <?php include $page.'.php'; ?>
         <?endif;?>
+
     </body>
 </html>

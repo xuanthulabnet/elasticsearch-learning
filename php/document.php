@@ -6,7 +6,7 @@ require 'vendor/autoload.php';
 //Cấu hình kết nối đến ES
 $hosts = [
     [
-        'host' => 'localhost',          //yourdomain.com
+        'host' => '127.0.0.1',
         'port' => '9200',
         'scheme' => 'http',             //https
     ],
@@ -27,6 +27,7 @@ if (isset($_POST['title']) && isset($_POST['content']) && isset($_POST['keywords
         'index' => 'article',
         'type'  => 'article_type',
         'id'    => $_POST['id'],
+
         'body'  => [
             'title' => $_POST['title'],
             'content' => $_POST['content'],
@@ -36,6 +37,7 @@ if (isset($_POST['title']) && isset($_POST['content']) && isset($_POST['keywords
 
 
     $response = $client->index($params);
+
 
     echo 'Đã tạo, cập nhật ID ' . $_POST['id'];
 }

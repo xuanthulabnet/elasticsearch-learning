@@ -5,7 +5,7 @@ require "vendor/autoload.php";
 
 $hosts = [
     [
-        'host' => 'localhost',
+        'host' => '127.0.0.1',
         'port' => '9200',
         'scheme' => 'http',
     ]
@@ -14,9 +14,27 @@ $hosts = [
 $client = \Elasticsearch\ClientBuilder::create()
         ->setHosts($hosts)
         ->build();
+
+/*
+
+    Document {
+        title: data,
+        content: data,
+        keywords: data
+    }
+
+
+    article_type:
+       title: string|analyzer=
+ */
+
+
 $params = [
-    'index' => 'article'
+    'index' => 'article',
+
 ];
+ $client->cat()->indices();
+
 
 
 $act = $_GET['act'] ?? null;
@@ -32,7 +50,57 @@ if ($act == 'create') {
         $mgs = "Index - article đã tồn tại - không cần tạo";
     }
     else {
-        $rs = $client->indices()->create($params);
+
+
+        $params = [
+            'index' => 'article',
+
+            'body' => [
+                'settings' => [
+                    'number_of_shards' => 1,
+                    'number_of_replicas' => 0,
+                    'analysis' => [
+                        'analyzer' => [ //Lọc loại bỏ thẻ html và index  chuyển đổi không dấu, chữ in thường
+                            'my_analyzer' => [
+                                'type' => 'custom',
+                                'tokenizer' => 'icu_tokenizer',
+                                "char_filter" => [ "html_strip"],
+                                'filter' => ['icu_folding', 'lowercase', 'stop'] //
+                            ],
+
+                        ]
+                    ],
+
+                ],
+            ],
+
+        ];
+
+       $response = $client->indices()->create($params);
+
+
+        $params = [
+            'index' => 'article',
+            'type' => 'article_type',
+            'include_type_name' => true,
+            'body' => [
+                'article_type' => [
+
+                    'properties' => [
+                        'title' => [
+                            'type' => 'text',
+                            'analyzer' => 'my_analyzer'
+                        ],
+
+                    ]
+                ]
+            ]
+        ];
+
+
+
+        $response = $client->indices()->putMapping($params);
+
         $mgs = "Index - articl mới được tạo";
     }
 
@@ -57,7 +125,7 @@ else if ($act == 'delete') {
 }
 
 
-$exist = $client->indices()->exists($params);
+$exist = $client->indices()->exists(['index' => 'article']);
 
 ?>
 

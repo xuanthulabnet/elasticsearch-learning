@@ -4,7 +4,7 @@ require 'vendor/autoload.php';
 
 $hosts = [
     [
-        'host' => 'localhost',
+        'host' => '127.0.0.1',
         'port' => '9200',
         'scheme' => 'http',
     ]
@@ -23,23 +23,39 @@ if ($search != null) {
     $params = [
         'index' => 'article',
         'type' => 'article_type',
+
         'body' => [
+
             'query' => [
+
                 'bool' => [
                     'should' => [
                         ['match' => ['title' => $search]],
                         ['match' => ['keywords' => $search]],
                     ]
                 ]
+            ],
+            'highlight' => [
+                 'pre_tags' => ["<strong class='text-danger'>"],
+                 'post_tags' => ["</strong>"],
+
+                'fields' => [
+                            'title' =>  new stdClass(),
+                            'keywords' => new stdClass()
+                    ]
             ]
         ]
     ];
-
-
     $prs = $client->search($params);
-    if ($prs['hits']['total']['value'] >= 1) {
+
+//    echo "<pre>";
+//    print_r($prs);
+//    echo "</pre>";
+    if ($prs['hits']['total'] >= 1) {
         $rs = $prs['hits']['hits'];
     }
+
+
 }
 
 
@@ -61,9 +77,15 @@ if ($search != null) {
             <h3>Kết quả tìm kiếm: <?=$search?></h3>
             <hr>
             <?foreach ($rs as $r):?>
+                <?
+                    $title    = $r['highlight']['title'][0] ??  $r['_source']['title'];
+                    $keywords =  $r['highlight']['keywords'] ?? $r['_source']['keywords'];
 
-                <p><a href="#"><?=$r['_source']['title']?></a> <br>
-                    <?=implode(',', $r['_source']['keywords'])?></p>
+                ?>
+
+
+                <p><a href="#"><?=$title?></a> <br>
+                    <?=implode(',', $keywords)?></p>
                 <hr>
 
             <?endforeach?>
